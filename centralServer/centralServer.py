@@ -1,7 +1,9 @@
 import socket
 import json
 import os
+from threading import Thread
 
+# Informacion de los servidores
 def save_server_ip(ip_address, json_file_path):
     # Cargar datos existentes del archivo JSON o inicializar un diccionario vacío
     if os.path.exists(json_file_path):
@@ -21,21 +23,13 @@ def save_server_ip(ip_address, json_file_path):
         json.dump(data, file)
 
 
-def send_file_content(client_socket, file_path):
-    with open(file_path, 'r') as file:
-        file_content = file.read()
-        client_socket.send(file_content.encode('utf-8'))
-
-
-def start_server(host, port):
+def start_server(host, port, script_dir):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
     s.listen(5)
 
     print(f"El servidor intermediario está escuchando en {host}:{port}")
-
-    # Obtener la ruta del archivo .py que se está ejecutando
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
     json_file_path = os.path.join(script_dir, "server_ips.json")
 
     while True:
@@ -53,7 +47,15 @@ def start_server(host, port):
         
         c.close()
 
-def start_serverClient(host, port):
+
+# Envio de informacion a los clientes
+def send_file_content(client_socket, file_path):
+    with open(file_path, 'r') as file:
+        file_content = file.read()
+        client_socket.send(file_content.encode('utf-8'))
+
+
+def start_serverClient(host, port, script_dir):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
     s.listen(5)
@@ -63,18 +65,21 @@ def start_serverClient(host, port):
     while True:
         c, addr = s.accept()
         print(f"Se estableció conexión con: {addr}")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
         json_file_path = os.path.join(script_dir, "server_ips.json")
         send_file_content(c, json_file_path)
         c.close()
 
-    
 
 if __name__ == "__main__":
     host = ""  
     port = 33330
     portClient = 33331
+    # Obtener la ruta del archivo .py que se está ejecutando
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    start_server(host, port)
+    server_thread = Thread(target=start_server, args=(host, port, script_dir))
+    server_thread.start()
     
-    start_serverClient(host, portClient)
+    client_server_thread = Thread(target=start_serverClient, args=(host, portClient, script_dir))
+    client_server_thread.start()
