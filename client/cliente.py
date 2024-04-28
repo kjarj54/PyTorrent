@@ -2,7 +2,8 @@ import socket
 import threading
 import os
 import re
-
+import json
+import argparse
 
 def receive_file_fragment(host, port, directory, video_name, num_parts, part_index):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -57,3 +58,19 @@ with open(output_video_path, "wb") as outfile:
 for f in sorted_files:
     os.remove(os.path.join(temp_directory, f))
 os.rmdir(temp_directory)
+
+
+def startClient(host, port):
+    c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    c.connect((host, port))
+    msg_received = c.recv(1024)
+    
+    reciveJson = json.loads(msg_received.decode('utf8'))
+    print(reciveJson)
+    c.close()
+
+
+if __name__ == "__main__":
+    host = "192.168.0.13"
+    port = 33331
+    startClient(host, port)

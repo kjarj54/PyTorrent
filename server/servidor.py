@@ -29,5 +29,15 @@ def send_file_fragment(host, port, base_directory):
             conn.sendall(part)
 
 # Ejemplos para diferentes servidores:
-send_file_fragment("localhost", 12345, "videospc1")
+# send_file_fragment("localhost", 12345, "videospc1")
 # send_file_fragment("localhost", 12346, "videospc2")
+
+def connectionCentralServer(host, port):
+    c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    c.connect((host, port))
+    c.close()
+
+if __name__ == "__main__":
+    host = "192.168.0.13"
+    port = 33330
+    connectionCentralServer(host, port)
