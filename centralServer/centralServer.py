@@ -23,7 +23,7 @@ def ping_servers(script_dir):
         for server_name, server_info in data.items():
             ip_address = server_info.get("ip")
             if ip_address:
-                response = os.system("ping -c 1 " + ip_address)
+                response = os.system("ping -n 1 " + ip_address)
                 if response != 0:  # Si el ping no fue exitoso
                     servers_to_remove.append(server_name)
 
@@ -132,5 +132,5 @@ if __name__ == "__main__":
     client_server_thread = Thread(target=start_serverClient, args=(host, portClient, script_dir))
     client_server_thread.start()
     
-    ping_thread = Thread(target=ping_servers, args=(script_dir))
+    ping_thread = Thread(target=ping_servers, args=(script_dir,))
     ping_thread.start()
