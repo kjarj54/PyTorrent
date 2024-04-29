@@ -2,6 +2,42 @@ import socket
 import json
 import os
 from threading import Thread
+import time
+
+#Metodo para hacer ping
+
+def ping_servers(script_dir):
+    json_file_path = os.path.join(script_dir, "server_ips.json")
+    
+    while True:
+        # Cargar datos existentes del archivo JSON o inicializar un diccionario vacío
+        if os.path.exists(json_file_path):
+            with open(json_file_path, 'r') as file:
+                data = json.load(file)
+        else:
+            data = {}
+
+        servers_to_remove = []
+
+        # Iterar sobre los servidores y realizar ping
+        for server_name, server_info in data.items():
+            ip_address = server_info.get("ip")
+            if ip_address:
+                response = os.system("ping -c 1 " + ip_address)
+                if response != 0:  # Si el ping no fue exitoso
+                    servers_to_remove.append(server_name)
+
+        # Eliminar los servidores que no respondieron al ping
+        for server_name in servers_to_remove:
+            del data[server_name]
+
+        # Guardar los cambios en el archivo JSON
+        with open(json_file_path, 'w') as file:
+            json.dump(data, file)
+
+        time.sleep(10)  # Esperar 10 segundos antes de hacer el siguiente ping
+
+
 
 # Metodo para los nombres de los servidores
 def get_next_server_name(data):
@@ -95,3 +131,6 @@ if __name__ == "__main__":
     
     client_server_thread = Thread(target=start_serverClient, args=(host, portClient, script_dir))
     client_server_thread.start()
+    
+    ping_thread = Thread(target=ping_servers, args=(script_dir))
+    ping_thread.start()
