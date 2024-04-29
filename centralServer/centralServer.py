@@ -3,6 +3,19 @@ import json
 import os
 from threading import Thread
 
+# Metodo para los nombres de los servidores
+def get_next_server_name(data):
+    # Obtener todos los nombres de servidores existentes
+    server_names = [name for name in data if name.startswith("server")]
+    if not server_names:
+        return "server1"  # Si no hay nombres de servidores existentes, comenzar con "server1"
+    
+    # Obtener el número más alto de los nombres de servidores existentes y calcular el siguiente consecutivo
+    highest_number = max(int(name[6:]) for name in server_names)
+    next_number = highest_number + 1
+    return f"server{next_number}"
+
+
 # Informacion de los servidores
 def save_server_ip(ip_address, json_file_path):
     # Cargar datos existentes del archivo JSON o inicializar un diccionario vacío
@@ -11,11 +24,10 @@ def save_server_ip(ip_address, json_file_path):
             data = json.load(file)
     else:
         data = {}
-    
-    server_name = "server1"
+    server_name = get_next_server_name(data)
     
     if server_name in data:
-        data[server_name]["videos"].append(ip_address)
+        data[server_name]["ip"].append(ip_address)
     else:
         data[server_name] = {"ip": ip_address, "videos": []}
 
