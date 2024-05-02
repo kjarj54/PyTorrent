@@ -86,7 +86,7 @@ def start_server(host, port, script_dir):
         print(f"Se estableció conexión con: {addr}")
 
         # Recibir dirección IP del servidor
-        ip_received = addr
+        ip_received,_ = addr
         print(f"Dirección IP recibida: {ip_received}")
 
         # Guardar la dirección IP en el archivo JSON
