@@ -69,17 +69,26 @@ def startClient(host, port):
 
 if __name__ == "__main__":
     #Variables
-    host = "192.168.0.13"
+    host = "192.168.0.14"
     port = 33331
     temp_directory = "temp_parts"
     os.makedirs(temp_directory, exist_ok=True)
     
-    startClient(host, port)
+    
     parser = argparse.ArgumentParser(description='Cliente')
+    parser.add_argument('--servers', help='Lista de servidores', action='store_true')
+    parser.add_argument('--lsvid', help='Lista de videos', action='store_true')
+    parser.add_argument('--video', type=str , help='Opcion de video a descargar')
+    parser.add_argument('--download', help='Descargar video', action='store_true')
     
     
-
-    servers = [("localhost", 12345, "Appa-Night-Ride-4K-unido.mp4", 2, 2),
-           ("localhost", 12346, "Appa-Night-Ride-4K-unido.mp4", 2, 1)]
+    args = parser.parse_args()
+    if args.servers:
+        startClient(host, port)
+    
+     
+        
+    #servers = [("localhost", 12345, "Appa-Night-Ride-4K-unido.mp4", 2, 2),
+    #       ("localhost", 12346, "Appa-Night-Ride-4K-unido.mp4", 2, 1)]
     
     
