@@ -38,6 +38,6 @@ def connectionCentralServer(host, port):
     c.close()
 
 if __name__ == "__main__":
-    host = "192.168.0.13"
-    port = 33330
-    connectionCentralServer(host, port)
+    hostCentralServer = "192.168.0.14"
+    portCentralServer = 33330
+    connectionCentralServer(hostCentralServer, portCentralServer)
