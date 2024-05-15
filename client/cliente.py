@@ -85,7 +85,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.servers:
         startClient(host, port)
-    
+    if args.lsvid:
+        print("Lista de videos")
      
         
     #servers = [("localhost", 12345, "Appa-Night-Ride-4K-unido.mp4", 2, 2),

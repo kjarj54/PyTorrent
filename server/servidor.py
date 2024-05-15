@@ -32,12 +32,24 @@ def send_file_fragment(host, port, base_directory):
 # send_file_fragment("localhost", 12345, "videospc1")
 # send_file_fragment("localhost", 12346, "videospc2")
 
-def connectionCentralServer(host, port):
+def get_video_names(base_directory):
+    video_names = []
+    videos_directory = os.path.join(base_directory, "videos", "todo")
+    for filename in os.listdir(videos_directory):
+        if os.path.isfile(os.path.join(videos_directory, filename)):
+            video_names.append(filename)
+    return video_names
+
+def connectionCentralServer(host, port, base_directory):
+        
     c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     c.connect((host, port))
+    
+    c.send()
     c.close()
 
 if __name__ == "__main__":
     hostCentralServer = "192.168.0.14"
     portCentralServer = 33330
-    connectionCentralServer(hostCentralServer, portCentralServer)
+    baseDirectory = os.path.dirname(os.path.abspath(__file__))
+    connectionCentralServer(hostCentralServer, portCentralServer,baseDirectory)
