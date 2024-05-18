@@ -1,5 +1,8 @@
+import json
 import socket
 import os
+from threading import Thread
+
 
 def send_file_fragment(host, port, base_directory):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
@@ -28,28 +31,56 @@ def send_file_fragment(host, port, base_directory):
             conn.recv(1024)
             conn.sendall(part)
 
-# Ejemplos para diferentes servidores:
-# send_file_fragment("localhost", 12345, "videospc1")
-# send_file_fragment("localhost", 12346, "videospc2")
 
-def get_video_names(base_directory):
+def get_video_names(videos_directory):
     video_names = []
-    videos_directory = os.path.join(base_directory, "videos", "todo")
     for filename in os.listdir(videos_directory):
         if os.path.isfile(os.path.join(videos_directory, filename)):
             video_names.append(filename)
     return video_names
 
 def connectionCentralServer(host, port, base_directory):
-        
     c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     c.connect((host, port))
-    
-    c.send()
+    # envia el puerto y los videos de get_video_names, todo en un json
+    info = {"port": portServerVideo, "videos": get_video_names(os.path.join(base_directory, "videos"))}
+    data = json.dumps(info)
+    c.send(data.encode())
     c.close()
 
+
+
+def start_server(host, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((host, port))
+    s.listen(5)
+
+    print(f"El servidor intermediario está escuchando en {host}:{port}")
+    while True:
+        # Establecer conexión
+        c, addr = s.accept()
+        print(f"Se estableció conexión con: {addr}")
+        # Recibir dirección IP del servidor
+        ip_received,_ = addr
+        print(f"Dirección IP recibida: {ip_received}")
+        videos = get_video_names(os.path.join(baseDirectory, "videos"))
+        c.send(json.dumps({"port": portServerVideo, "videos": videos}).encode())
+        
+        c.close()
+
+
+
 if __name__ == "__main__":
-    hostCentralServer = "192.168.0.14"
+    
+    hostServerVideo = "10.251.45.151"
+    portServerVideo = 33332
+    
+    hostCentralServer = "10.251.45.151"
     portCentralServer = 33330
     baseDirectory = os.path.dirname(os.path.abspath(__file__))
+    server_thread = Thread(target=start_server, args=(hostServerVideo, portServerVideo))
+    server_thread.start()
     connectionCentralServer(hostCentralServer, portCentralServer,baseDirectory)
+    videoDirectory = os.path.join(baseDirectory, "videos")
+    print(get_video_names(videoDirectory))
+    
