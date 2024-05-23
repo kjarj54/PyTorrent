@@ -63,31 +63,48 @@ def startClient(host, port):
     msg_received = c.recv(1024)
     
     reciveJson = json.loads(msg_received.decode('utf8'))
-    print(reciveJson)
     c.close()
+    return reciveJson
 
+
+def print_servers_info(servers):
+    for server_name, server_info in servers.items():
+        print(f"Server Name: {server_name}")
+        print(f"  IP Address: {server_info['ip']}")
+        print(f"  IP port: {server_info['port']}")
+        print(f"  Videos: {server_info['videos']}\n")
 
 if __name__ == "__main__":
     #Variables
-    host = "192.168.0.14"
+    host = "10.251.46.167"
     port = 33331
     temp_directory = "temp_parts"
     os.makedirs(temp_directory, exist_ok=True)
     
+    reciveJson = startClient(host, port)
     
     parser = argparse.ArgumentParser(description='Cliente')
     parser.add_argument('--servers', help='Lista de servidores', action='store_true')
     parser.add_argument('--lsvid', help='Lista de videos', action='store_true')
-    parser.add_argument('--video', type=str , help='Opcion de video a descargar')
-    parser.add_argument('--download', help='Descargar video', action='store_true')
+    parser.add_argument('-v', type=str , help='Opcion de video a descargar')
+    parser.add_argument('-d', help='Descargar video', action='store_true')
+    parser.add_argument('-s',type=str, help='Servidor a conectarse')
+    parser.add_argument('-p',type=int, help='Puerto a conectarse')
     
     
     args = parser.parse_args()
     if args.servers:
-        startClient(host, port)
+        print_servers_info(reciveJson)
     if args.lsvid:
-        print("Lista de videos")
-     
+        print("Lista de videos disponibles:")
+        for server_name, server_info in reciveJson.items():
+            for video in server_info['videos']:
+                print(f"  {video}")
+    if args.d:
+        
+        host = args.s
+        port = args.p
+        
         
     #servers = [("localhost", 12345, "Appa-Night-Ride-4K-unido.mp4", 2, 2),
     #       ("localhost", 12346, "Appa-Night-Ride-4K-unido.mp4", 2, 1)]

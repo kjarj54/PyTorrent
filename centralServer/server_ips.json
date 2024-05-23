@@ -1,1 +1,1 @@
-{"server": {"ip": "192.168.1.100", "videos": []}, "server1": {"ip": "192.168.0.13", "videos": []}}
+{"server1": {"ip": "10.251.46.167", "port": 33332, "videos": ["Jumanji.mp4", "todo"]}}
