@@ -72,10 +72,10 @@ def start_server(host, port):
 
 if __name__ == "__main__":
     
-    hostServerVideo = "10.251.46.167"
+    hostServerVideo = "localhost"
     portServerVideo = 33332
     
-    hostCentralServer = "10.251.46.167"
+    hostCentralServer = "localhost"
     portCentralServer = 33330
     baseDirectory = os.path.dirname(os.path.abspath(__file__))
     server_thread = Thread(target=start_server, args=(hostServerVideo, portServerVideo))

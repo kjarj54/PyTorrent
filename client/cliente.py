@@ -76,7 +76,7 @@ def print_servers_info(servers):
 
 if __name__ == "__main__":
     #Variables
-    host = "10.251.46.167"
+    host = "localhost"
     port = 33331
     temp_directory = "temp_parts"
     os.makedirs(temp_directory, exist_ok=True)
