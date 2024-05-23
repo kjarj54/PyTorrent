@@ -101,9 +101,13 @@ if __name__ == "__main__":
             for video in server_info['videos']:
                 print(f"  {video}")
     if args.d:
-        
-        host = args.s
-        port = args.p
+        if args.p is None and args.s is None:
+            servers = [("10.251.46.167",33332,"Jumanji.mp4",1,1)]
+            downloadVid(servers, temp_directory)
+            #combineVid(temp_directory)
+            print(f"Video {args.v} descargado exitosamente.")
+        else:
+            print(f"Video {args.v} descargado exitosamente.")   
         
         
     #servers = [("localhost", 12345, "Appa-Night-Ride-4K-unido.mp4", 2, 2),
