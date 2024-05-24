@@ -4,30 +4,38 @@ import os
 import re
 import json
 import argparse
+import shutil
+
 
 def receive_file_fragment(host, port, directory, video_name, num_parts, part_index):
+    print(f"Conectando a {host}:{port} para descargar la parte {part_index} de {num_parts} de {video_name}")
+   
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((host, port))
-        solicitud = f"{video_name},{num_parts},{part_index}"
-        sock.sendall(solicitud.encode())
+        try:
+            sock.connect((host, port))
+            solicitud = f"VIDEO,{video_name},{num_parts},{part_index}"
+            sock.sendall(solicitud.encode())
 
-        filename = sock.recv(1024).decode().strip()
-        if not filename:
-            print("No se recibió el nombre del archivo correctamente.")
-            return
+            file_name = sock.recv(1024).decode().strip()
+            if not file_name:
+                print("No se recibió el nombre del archivo correctamente.")
+                return
+            
+            print(f"Recibiendo {file_name}")
+            filepath = os.path.join(directory, file_name)
+            sock.sendall(b"OK")
 
-        filepath = os.path.join(directory, filename)
-        sock.sendall(b"OK")
-
-        with open(filepath, "wb") as file:
-            while True:
-                data = sock.recv(1024)
-                if not data:
-                    break
-                file.write(data)
-
-
-def downloadVid(servers, temp_directory):
+            with open(filepath, "wb") as file:
+                while True:
+                    data = sock.recv(1024)
+                    if not data:
+                        break
+                    file.write(data)
+        except Exception as e:
+            print(f"Error al recibir el fragmento del archivo: {e}")
+              
+                
+def download_vid(servers, temp_directory):
     threads = []
     for host, port, video_name, num_parts, part_index in servers:
         thread = threading.Thread(target=receive_file_fragment, args=(
@@ -37,13 +45,29 @@ def downloadVid(servers, temp_directory):
 
     for thread in threads:
         thread.join()
+        
+        
+def start_client(host, port):
+    c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    c.connect((host, port))
+    msg_received = c.recv(1024)
+    
+    recive_json = json.loads(msg_received.decode('utf8'))
+    c.close()
+    return recive_json
 
-
-def combineVid(temp_directory):
-    received_files = [f for f in os.listdir(
-        temp_directory) if os.path.isfile(os.path.join(temp_directory, f))]
-    sorted_files = sorted(received_files, key=lambda x: int(
-        re.search(r"p(\d+)", x).group(1)))
+def combine_vid(temp_directory):
+    received_files = [f for f in os.listdir(temp_directory) if os.path.isfile(os.path.join(temp_directory, f))]
+    
+    # Filtrar solo los archivos que coinciden con el formato esperado
+    received_files = [f for f in received_files if re.search(r"_part(\d+)\.bin", f)]
+    
+    # Verificar si se recibieron archivos
+    if not received_files:
+        print("No se recibieron archivos válidos para combinar.")
+        return
+    
+    sorted_files = sorted(received_files, key=lambda x: int(re.search(r"_part(\d+)\.bin", x).group(1)))
 
     output_video_path = "videosCliente/video_final.mp4"
     os.makedirs(os.path.dirname(output_video_path), exist_ok=True)
@@ -52,19 +76,13 @@ def combineVid(temp_directory):
             with open(os.path.join(temp_directory, f), "rb") as infile:
                 outfile.write(infile.read())
 
+    # Eliminar archivos temporales y directorio
     for f in sorted_files:
         os.remove(os.path.join(temp_directory, f))
-    os.rmdir(temp_directory)
+    if not os.listdir(temp_directory):
+        shutil.rmtree(temp_directory)
 
-
-def startClient(host, port):
-    c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    c.connect((host, port))
-    msg_received = c.recv(1024)
-    
-    reciveJson = json.loads(msg_received.decode('utf8'))
-    c.close()
-    return reciveJson
+    print("La combinación de archivos se realizó con éxito.")
 
 
 def print_servers_info(servers):
@@ -75,13 +93,12 @@ def print_servers_info(servers):
         print(f"  Videos: {server_info['videos']}\n")
 
 if __name__ == "__main__":
-    #Variables
     host = "localhost"
     port = 33331
     temp_directory = "temp_parts"
     os.makedirs(temp_directory, exist_ok=True)
     
-    reciveJson = startClient(host, port)
+    reciveJson = start_client(host, port)
     
     parser = argparse.ArgumentParser(description='Cliente')
     parser.add_argument('--servers', help='Lista de servidores', action='store_true')
@@ -90,7 +107,6 @@ if __name__ == "__main__":
     parser.add_argument('-d', help='Descargar video', action='store_true')
     parser.add_argument('-s',type=str, help='Servidor a conectarse')
     parser.add_argument('-p',type=int, help='Puerto a conectarse')
-    
     
     args = parser.parse_args()
     if args.servers:
@@ -102,15 +118,11 @@ if __name__ == "__main__":
                 print(f"  {video}")
     if args.d:
         if args.p is None and args.s is None:
-            servers = [("10.251.46.167",33332,"Jumanji.mp4",1,1)]
-            downloadVid(servers, temp_directory)
-            #combineVid(temp_directory)
-            print(f"Video {args.v} descargado exitosamente.")
+            servers = [("localhost", 33332, "Jumanji.mp4", 1, 1)]
+            download_vid(servers, temp_directory)
+            combine_vid(temp_directory)
         else:
-            print(f"Video {args.v} descargado exitosamente.")   
-        
-        
-    #servers = [("localhost", 12345, "Appa-Night-Ride-4K-unido.mp4", 2, 2),
-    #       ("localhost", 12346, "Appa-Night-Ride-4K-unido.mp4", 2, 1)]
-    
-    
+            servers = [(args.s, args.p, args.v, 1, 1)]
+            download_vid(servers, temp_directory)
+            combine_vid(temp_directory)
+            print(f"Video {args.v} descargado exitosamente.")
