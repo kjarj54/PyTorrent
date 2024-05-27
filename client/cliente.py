@@ -118,9 +118,20 @@ if __name__ == "__main__":
                 print(f"  {video}")
     if args.d:
         if args.p is None and args.s is None:
-            servers = [("localhost", 33332, "Jumanji.mp4", 1, 1)]
-            download_vid(servers, temp_directory)
-            combine_vid(temp_directory)
+            video_name = args.v
+            servers = []
+            part_index = 1
+
+            for server_name, server_info in reciveJson.items():
+                if video_name in server_info['videos']:
+                    servers.append((server_info['ip'], server_info['port'], video_name, len(reciveJson), part_index))
+                    part_index += 1
+            
+            if not servers:
+                print(f"No se encontraron servidores que contengan el video {video_name}")
+            else:
+                download_vid(servers, temp_directory)
+                combine_vid(temp_directory)
         else:
             servers = [(args.s, args.p, args.v, 1, 1)]
             download_vid(servers, temp_directory)
