@@ -5,6 +5,8 @@ import re
 import json
 import argparse
 import shutil
+import time
+
 
 
 def receive_file_fragment(host, port, directory, video_name, num_parts, part_index):
@@ -37,6 +39,8 @@ def receive_file_fragment(host, port, directory, video_name, num_parts, part_ind
                 
 def download_vid(servers, temp_directory):
     threads = []
+    start_time = time.time()
+
     for host, port, video_name, num_parts, part_index in servers:
         thread = threading.Thread(target=receive_file_fragment, args=(
             host, port, temp_directory, video_name, num_parts, part_index))
@@ -45,6 +49,11 @@ def download_vid(servers, temp_directory):
 
     for thread in threads:
         thread.join()
+    
+    end_time = time.time()
+    duration = end_time - start_time
+    print(f"Descarga completada en {duration:.2f} segundos.")
+
         
         
 def start_client(host, port):

@@ -102,13 +102,19 @@ def start_server(host, port, base_directory):
         thread.start()
 
 if __name__ == "__main__":
-    hostServerVideo = "localhost"
-    portServerVideo = 33332
-    
-    hostCentralServer = "localhost"
-    portCentralServer = 33330
-    baseDirectory = os.path.dirname(os.path.abspath(__file__))
+    print("Ingrese la dirección IP y puerto del servidor de video ")
+    print("==============================================")
 
+    hostServerVideo = input("Dirección IP del servidor de video: ")
+    portServerVideo = int(input("Puerto del servidor de video: "))
+    print("==============================================")
+    
+    print("Ingrese la dirección IP y puerto del servidor central.")
+    hostCentralServer = input("Dirección IP del servidor central: ")
+    portCentralServer = int(input("Puerto del servidor central: "))
+    
+    baseDirectory = os.path.dirname(os.path.abspath(__file__))
+    
     try:
         central_server_thread = Thread(target=connection_central_server, args=(hostCentralServer, portCentralServer, baseDirectory))
         central_server_thread.start()
