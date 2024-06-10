@@ -155,12 +155,11 @@ def print_servers_info(servers):
         print(f"  Videos: {server_info['videos']}\n")
 
 if __name__ == "__main__":
-    host = "localhost"
-    port = 33331
+    
     temp_directory = "temp_parts"
     os.makedirs(temp_directory, exist_ok=True)
     
-    reciveJson = start_client(host, port)
+    
     
     parser = argparse.ArgumentParser(description='Cliente')
     parser.add_argument('--servers', help='Lista de servidores', action='store_true')
@@ -169,8 +168,18 @@ if __name__ == "__main__":
     parser.add_argument('-d', help='Descargar video', action='store_true')
     parser.add_argument('-s',type=str, help='Servidor a conectarse')
     parser.add_argument('-p',type=int, help='Puerto a conectarse')
+    parser.add_argument('-cs',type=str, help='Conectar a servidor central')
+    parser.add_argument('-cp',type=int, help='Puerto a conectarse del servidor central')
+    
+    
+    
     
     args = parser.parse_args()
+    
+    host = args.cs
+    port = args.cp
+    reciveJson = start_client(host, port)
+    
     if args.servers:
         print_servers_info(reciveJson)
     if args.lsvid:
