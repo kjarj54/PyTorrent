@@ -56,14 +56,13 @@ def receive_file_fragment(host, port, directory, video_name, num_parts, part_ind
             print(f"Recibiendo {file_name}")
             filepath = os.path.join(directory, file_name)
             sock.sendall(b"OK")
-            fragmentSize = video_size // num_parts
-            with open(filepath, "wb") as file, tqdm(total=fragmentSize, unit='B', unit_scale=True, desc=file_name) as pbar:
+            
+            with open(filepath, "wb") as file:
                 while True:
                     data = sock.recv(1024)
                     if not data:
                         break
                     file.write(data)
-                    pbar.update(len(data))
         except Exception as e:
             print(f"Error al recibir el fragmento del archivo: {e}")
               
