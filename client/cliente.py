@@ -6,7 +6,6 @@ import json
 import argparse
 import shutil
 import time
-from tqdm import tqdm
 
 
 global reciveJson_server
