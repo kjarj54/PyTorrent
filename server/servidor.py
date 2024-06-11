@@ -71,14 +71,12 @@ def handle_request(conn, base_directory):
     finally:
         conn.close()
 
-def get_video_names(directory):
-    videos = []
-    for filename in os.listdir(directory):
-        if filename.endswith(".mp4"):  # Asumiendo que los videos son archivos .mp4
-            filepath = os.path.join(directory, filename)
-            size = os.path.getsize(filepath)  # Obtiene el tamaño del archivo en bytes
-            videos.append({"name": filename, "size": size})
-    return videos
+def get_video_names(videos_directory):
+    video_names = []
+    for filename in os.listdir(videos_directory):
+        if os.path.isfile(os.path.join(videos_directory, filename)):
+            video_names.append(filename)
+    return video_names
 
 def connection_central_server(host, port, base_directory):
     try:
