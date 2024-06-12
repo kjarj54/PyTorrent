@@ -29,24 +29,25 @@ def receive_file_fragment(host, port, directory, video_name, num_parts, part_ind
             sock.sendall(b"OK")
 
             start_time = time.time()
-            
+
             with open(filepath, "wb") as file:
                 while True:
-                    data = sock.recv(4096)  # Incrementar el tamaño del búfer
+                    data = sock.recv(8192)  # Incrementar el tamaño del búfer
                     if not data:
                         break
                     file.write(data)
 
             end_time = time.time()
             duration = end_time - start_time
-            print(f"Descarga completada en {duration:.2f} segundos.")
+            print(f"Descarga de la parte {part_index} completada en {duration:.2f} segundos.")
             
         except Exception as e:
             print(f"Error al recibir el fragmento del archivo: {e}")
             
 
 def download_vid(servers, temp_directory):
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    # Utiliza ThreadPoolExecutor para manejar mejor los hilos
+    with ThreadPoolExecutor(max_workers=len(servers)) as executor:
         futures = []
         for host, port, video_name, num_parts, part_index in servers:
             futures.append(executor.submit(receive_file_fragment, host, port, temp_directory, video_name, num_parts, part_index))
@@ -140,30 +141,30 @@ if __name__ == "__main__":
     video_name = args.v
     
     if args.d:
-        video_name = args.v
-        servers = []
+            video_name = args.v
+            servers = []
 
-        if args.p and args.s:
-            # Download from the specific server and port provided
-            servers.append((args.s, args.p, video_name, 1, 1))
-            download_vid(servers, temp_directory)
-            combine_vid(temp_directory)
-            print(f"Video {video_name} descargado exitosamente.")
-        else:
-            # Download from all servers that have the video
-            part_index = 1
-            for server_name, server_info in reciveJson.items():
-                if video_name in server_info['videos']:
-                    servers.append(
-                        (server_info['ip'], server_info['port'], video_name, len(reciveJson), part_index)
-                    )
-                    part_index += 1
-
-            if not servers:
-                print(f"No se encontraron servidores que contengan el video {video_name}")
-            else:
+            if args.p and args.s:
+                # Descargar de un servidor específico
+                servers.append((args.s, args.p, video_name, 1, 1))
                 download_vid(servers, temp_directory)
                 combine_vid(temp_directory)
                 print(f"Video {video_name} descargado exitosamente.")
+            else:
+                # Descargar de todos los servidores que tienen el video
+                part_index = 1
+                for server_name, server_info in reciveJson.items():
+                    if video_name in server_info['videos']:
+                        servers.append(
+                            (server_info['ip'], server_info['port'], video_name, len(reciveJson), part_index)
+                        )
+                        part_index += 1
+
+                if not servers:
+                    print(f"No se encontraron servidores que contengan el video {video_name}")
+                else:
+                    download_vid(servers, temp_directory)
+                    combine_vid(temp_directory)
+                    print(f"Video {video_name} descargado exitosamente.")
     else:
-     print("Flag -d is not set. No action taken.")
+            print("Flag -d is not set. No action taken.")

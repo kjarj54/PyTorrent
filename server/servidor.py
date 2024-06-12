@@ -44,11 +44,11 @@ def handle_request(conn, base_directory):
             parts = solicitud.split(',')
             if parts[0] == "VIDEO" and len(parts) == 4:
                 video_name, num_parts, part_index = parts[1], int(parts[2]), int(parts[3])
-                directory_Videos = os.path.join(base_directory, "videos")
-                print("Ruta de los videos: ", directory_Videos)
+                directory_videos = os.path.join(base_directory, "videos")
+                print("Ruta de los videos: ", directory_videos)
                 print(f"Enviando parte {part_index} de {num_parts} de {video_name} desde {base_directory}")
 
-                video_path = os.path.join(directory_Videos, video_name)
+                video_path = os.path.join(directory_videos, video_name)
                 if not os.path.exists(video_path):
                     print(f"Archivo {video_name} no encontrado.")
                     conn.close()
@@ -62,15 +62,21 @@ def handle_request(conn, base_directory):
                 end = start + part_size if part_index < num_parts else len(content)
                 part = content[start:end]
                 print(f"Enviando parte {part_index} de {num_parts} de {video_name}, con tamaño: {len(part)} bytes")
+                
+                # Enviar el nombre del archivo al cliente
                 filename = f"{video_name}_part{part_index}.bin"
                 conn.sendall(filename.encode())
-                conn.recv(1024)
-                conn.sendall(part)
+                confirmation = conn.recv(1024).decode().strip()
+                
+                if confirmation == "OK":
+                    # Enviar el fragmento del archivo al cliente
+                    conn.sendall(part)
+                else:
+                    print("El cliente no está listo para recibir el archivo.")
     except Exception as e:
         print(f"Error al manejar la solicitud del cliente: {e}")
     finally:
         conn.close()
-
 
 def get_video_names(videos_directory):
     video_names = []
