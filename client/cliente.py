@@ -6,12 +6,13 @@ import json
 import argparse
 import shutil
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 
 
 def receive_file_fragment(host, port, directory, video_name, num_parts, part_index):
     print(f"Conectando a {host}:{port} para descargar la parte {part_index} de {num_parts} de {video_name}")
-   
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
             sock.connect((host, port))
@@ -27,32 +28,34 @@ def receive_file_fragment(host, port, directory, video_name, num_parts, part_ind
             filepath = os.path.join(directory, file_name)
             sock.sendall(b"OK")
 
+            start_time = time.time()
+            
             with open(filepath, "wb") as file:
                 while True:
-                    data = sock.recv(1024)
+                    data = sock.recv(4096)  # Incrementar el tamaño del búfer
                     if not data:
                         break
                     file.write(data)
+
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"Descarga completada en {duration:.2f} segundos.")
+            
         except Exception as e:
             print(f"Error al recibir el fragmento del archivo: {e}")
-              
-                
+            
+
 def download_vid(servers, temp_directory):
-    threads = []
-    start_time = time.time()
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = []
+        for host, port, video_name, num_parts, part_index in servers:
+            futures.append(executor.submit(receive_file_fragment, host, port, temp_directory, video_name, num_parts, part_index))
+        
+        for future in futures:
+            future.result()
 
-    for host, port, video_name, num_parts, part_index in servers:
-        thread = threading.Thread(target=receive_file_fragment, args=(
-            host, port, temp_directory, video_name, num_parts, part_index))
-        threads.append(thread)
-        thread.start()
+    print("Descarga de video completada.")
 
-    for thread in threads:
-        thread.join()
-    
-    end_time = time.time()
-    duration = end_time - start_time
-    print(f"Descarga completada en {duration:.2f} segundos.")
 
         
         
@@ -134,24 +137,33 @@ if __name__ == "__main__":
         for server_name, server_info in reciveJson.items():
             for video in server_info['videos']:
                 print(f"  {video}")
+    video_name = args.v
+    
     if args.d:
-        if args.p is None and args.s is None:
-            video_name = args.v
-            servers = []
-            part_index = 1
+        video_name = args.v
+        servers = []
 
+        if args.p and args.s:
+            # Download from the specific server and port provided
+            servers.append((args.s, args.p, video_name, 1, 1))
+            download_vid(servers, temp_directory)
+            combine_vid(temp_directory)
+            print(f"Video {video_name} descargado exitosamente.")
+        else:
+            # Download from all servers that have the video
+            part_index = 1
             for server_name, server_info in reciveJson.items():
                 if video_name in server_info['videos']:
-                    servers.append((server_info['ip'], server_info['port'], video_name, len(reciveJson), part_index))
+                    servers.append(
+                        (server_info['ip'], server_info['port'], video_name, len(reciveJson), part_index)
+                    )
                     part_index += 1
-            
+
             if not servers:
                 print(f"No se encontraron servidores que contengan el video {video_name}")
             else:
                 download_vid(servers, temp_directory)
                 combine_vid(temp_directory)
-        else:
-            servers = [(args.s, args.p, args.v, 1, 1)]
-            download_vid(servers, temp_directory)
-            combine_vid(temp_directory)
-            print(f"Video {args.v} descargado exitosamente.")
+                print(f"Video {video_name} descargado exitosamente.")
+    else:
+     print("Flag -d is not set. No action taken.")

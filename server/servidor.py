@@ -61,7 +61,7 @@ def handle_request(conn, base_directory):
                 start = (part_index - 1) * part_size
                 end = start + part_size if part_index < num_parts else len(content)
                 part = content[start:end]
-
+                print(f"Enviando parte {part_index} de {num_parts} de {video_name}, con tamaño: {len(part)} bytes")
                 filename = f"{video_name}_part{part_index}.bin"
                 conn.sendall(filename.encode())
                 conn.recv(1024)
@@ -70,6 +70,7 @@ def handle_request(conn, base_directory):
         print(f"Error al manejar la solicitud del cliente: {e}")
     finally:
         conn.close()
+
 
 def get_video_names(videos_directory):
     video_names = []
