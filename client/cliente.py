@@ -7,10 +7,11 @@ import argparse
 import shutil
 import time
 from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 
 
-def receive_file_fragment(host, port, directory, video_name, num_parts, part_index):
+def receive_file_fragment(host, port, directory, video_name, num_parts, part_index, barrier):
     print(f"Conectando a {host}:{port} para descargar la parte {part_index} de {num_parts} de {video_name}")
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -27,6 +28,9 @@ def receive_file_fragment(host, port, directory, video_name, num_parts, part_ind
             print(f"Recibiendo {file_name}")
             filepath = os.path.join(directory, file_name)
             sock.sendall(b"OK")
+
+            # Espera en la barrera justo antes de comenzar a recibir datos
+            barrier.wait()
 
             start_time = time.time()
 
@@ -46,11 +50,15 @@ def receive_file_fragment(host, port, directory, video_name, num_parts, part_ind
             
 
 def download_vid(servers, temp_directory):
+    num_threads = len(servers)
+    # Crear una barrera para sincronizar los hilos
+    barrier = Barrier(num_threads)
+
     # Utiliza ThreadPoolExecutor para manejar mejor los hilos
-    with ThreadPoolExecutor(max_workers=len(servers)) as executor:
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = []
         for host, port, video_name, num_parts, part_index in servers:
-            futures.append(executor.submit(receive_file_fragment, host, port, temp_directory, video_name, num_parts, part_index))
+            futures.append(executor.submit(receive_file_fragment, host, port, temp_directory, video_name, num_parts, part_index, barrier))
         
         for future in futures:
             future.result()
