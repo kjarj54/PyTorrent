@@ -135,7 +135,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    host = "localhost"
+    host = args.cs
     port = 33331
     reciveJson = start_client(host, port)
     
